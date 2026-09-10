@@ -23,13 +23,17 @@ jobs:
       - name: Install Kaggle CLI
         run: pip install kaggle
 
-      - name: Pull Notebook from Kaggle
+      - name: Pull All Notebooks from Kaggle
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
-          mkdir -p titanic
-          kaggle kernels pull ahmedmabualsaud/titanic-getting-started -p ./titanic/
+          for kernel in $(kaggle kernels list --user ahmedmabualsaud --csv | awk -F',' 'NR>1 {print $1}'); do
+            folder_name=$(basename "$kernel")
+            echo "Pulling $kernel into folder $folder_name..."
+            mkdir -p "$folder_name"
+            kaggle kernels pull "$kernel" -p "./$folder_name/"
+          done
 
       - name: Commit and Push Changes
         run: |
